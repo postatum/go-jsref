@@ -119,26 +119,6 @@ func (r *Resolver) Resolve(v interface{}, ptr string, options ...Option) (ret in
 	return result, nil
 }
 
-// ResolveToBytes resolves $ref string to its contant as a bytes array
-func ResolveToBytes(ref string, providers ...RawProvider) ([]byte, error) {
-	u, err := url.Parse(ref)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse ref as URL")
-	}
-
-	if u.Host == "" && u.Path == "" {
-		return nil, errors.Wrap(err, "ptr doesn't contain any host/path part, apply json pointer directly to object")
-	}
-
-	u.Fragment = ""
-	for _, p := range providers {
-		if val, err := p.GetBytes(u); err == nil {
-			return val, nil
-		}
-	}
-	return nil, errors.Wrap(err, "failed to resolve reference")
-}
-
 func setPtrOrInterface(container, value reflect.Value) bool {
 	switch container.Kind() {
 	case reflect.Ptr:
@@ -414,4 +394,36 @@ func evalptr(ctx *resolveCtx, r *Resolver, v interface{}, ptrspec string) (ret i
 	}
 	// If this result contains more refs, expand that
 	return expandRefRecursive(ctx, r, x)
+}
+
+// New creates a new RawResolver
+func NewRaw() *RawResolver {
+	return &RawResolver{}
+}
+
+// AddProvider adds a new RawProvider to be searched for in case
+// a JSON pointer with more than just the URI fragment is given.
+func (r *RawResolver) AddProvider(p RawProvider) error {
+	r.providers = append(r.providers, p)
+	return nil
+}
+
+// ResolveToBytes resolves $ref string to its content as a bytes array
+func (r *RawResolver) ResolveToBytes(ref string) ([]byte, error) {
+	u, err := url.Parse(ref)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse ref as URL")
+	}
+
+	if u.Host == "" && u.Path == "" {
+		return nil, errors.Wrap(err, "ptr doesn't contain any host/path part, apply json pointer directly to object")
+	}
+
+	u.Fragment = ""
+	for _, p := range r.providers {
+		if val, err := p.GetBytes(u); err == nil {
+			return val, nil
+		}
+	}
+	return nil, errors.Wrap(err, "failed to resolve reference")
 }

@@ -17,6 +17,11 @@ type Resolver struct {
 	MaxRecursions int
 }
 
+// RawResolver uses RawProviders to resolve $ref to its bytes content
+type RawResolver struct {
+	providers []RawProvider
+}
+
 // Provider resolves a URL into a ... thing.
 type Provider interface {
 	Get(*url.URL) (interface{}, error)

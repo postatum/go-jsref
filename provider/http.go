@@ -2,11 +2,11 @@ package provider
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-	"io/ioutil"
 
 	"github.com/lestrrat/go-pdebug"
 	"github.com/pkg/errors"
