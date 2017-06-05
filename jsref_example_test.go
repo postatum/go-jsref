@@ -29,7 +29,7 @@ func Example() {
 	res.AddProvider(mp) // Register the provider
 
 	data := []struct {
-		Ptr string
+		Ptr     string
 		Options []jsref.Option
 	}{
 		{
@@ -42,12 +42,12 @@ func Example() {
 			Ptr: "#/foo/2", // "quux" (resolves via `mp`)
 		},
 		{
-			Ptr: "#/foo",   // ["bar",{"$ref":"#/sub"},{"$ref":"obj2#/sub"}]
+			Ptr: "#/foo", // ["bar",{"$ref":"#/sub"},{"$ref":"obj2#/sub"}]
 		},
 		{
-			Ptr: "#/foo",   // ["bar","baz","quux"]
+			Ptr: "#/foo", // ["bar","baz","quux"]
 			// experimental option to resolve all resulting values
-			Options: []jsref.Option{ jsref.WithRecursiveResolution(true) },
+			Options: []jsref.Option{jsref.WithRecursiveResolution(true)},
 		},
 	}
 	for _, set := range data {

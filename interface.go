@@ -21,3 +21,8 @@ type Resolver struct {
 type Provider interface {
 	Get(*url.URL) (interface{}, error)
 }
+
+// RawProvider resolves a URL into a bytes array.
+type RawProvider interface {
+	GetBytes(*url.URL) ([]byte, error)
+}

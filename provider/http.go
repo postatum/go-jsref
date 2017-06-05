@@ -27,6 +27,20 @@ func NewHTTP() *HTTP {
 // Note that once a document is read, it WILL be cached for the
 // duration of this object, unless you call `Reset`
 func (hp *HTTP) Get(key *url.URL) (interface{}, error) {
+	d, err := hp.GetBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var x interface{}
+	if err := json.Unmarshal(d, &x); err != nil {
+		return nil, errors.Wrap(err, "failed to parse JSON from HTTP resource")
+	}
+
+	return x, nil
+}
+
+func (hp *HTTP) GetBytes(key *url.URL) ([]byte, error) {
 	if pdebug.Enabled {
 		g := pdebug.Marker("HTTP.Get(%s)", key)
 		defer g.End()
@@ -49,14 +63,14 @@ func (hp *HTTP) Get(key *url.URL) (interface{}, error) {
 	}
 	defer res.Body.Close()
 
-	dec := json.NewDecoder(res.Body)
-
-	var x interface{}
-	if err := dec.Decode(&x); err != nil {
-		return nil, errors.Wrap(err, "failed to parse JSON from HTTP resource")
+	d, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read HTTP response body")
 	}
 
-	return x, nil
+	fp.mp.Set(key, d)
+
+	return d, nil
 }
 
 // Reset resets the in memory cache of JSON documents

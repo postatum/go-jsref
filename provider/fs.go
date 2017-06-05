@@ -2,6 +2,7 @@ package provider
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -26,6 +27,21 @@ func NewFS(root string) *FS {
 // Note that once a document is read, it WILL be cached for the
 // duration of this object, unless you call `Reset`
 func (fp *FS) Get(key *url.URL) (out interface{}, err error) {
+	d, err := fp.GetBytes(key)
+	if err != nil {
+		return nil, err
+	}
+
+	var x interface{}
+	if err := json.Unmarshal(d, &x); err != nil {
+		return nil, errors.Wrap(err, "failed to parse JSON local resource")
+	}
+
+	return x, nil
+}
+
+// GetBytes fetches the document specified by the `key` argument and returns its bytes content
+func (fp *FS) GetBytes(key *url.URL) ([]byte, error) {
 	if pdebug.Enabled {
 		g := pdebug.Marker("provider.FS.Get(%s)", key.String()).BindError(&err)
 		defer g.End()
@@ -52,21 +68,14 @@ func (fp *FS) Get(key *url.URL) (out interface{}, err error) {
 		return nil, errors.New("target is not a file")
 	}
 
-	f, err := os.Open(path)
+	d, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open local resource")
-	}
-	defer f.Close()
-
-	var x interface{}
-	dec := json.NewDecoder(f)
-	if err := dec.Decode(&x); err != nil {
-		return nil, errors.Wrap(err, "failed to parse JSON local resource")
+		return nil, errors.Wrap(err, "failed to read local file content")
 	}
 
-	fp.mp.Set(path, x)
+	fp.mp.Set(path, d)
 
-	return x, nil
+	return d, nil
 }
 
 // Reset resets the in memory cache of JSON documents

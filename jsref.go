@@ -11,6 +11,7 @@ import (
 )
 
 const ref = "$ref"
+
 var refrv = reflect.ValueOf(ref)
 
 type Option interface {
@@ -116,6 +117,26 @@ func (r *Resolver) Resolve(v interface{}, ptr string, options ...Option) (ret in
 	}
 
 	return result, nil
+}
+
+// ResolveToBytes resolves $ref string to its contant as a bytes array
+func ResolveToBytes(ref string, providers ...RawProvider) ([]byte, error) {
+	u, err := url.Parse(ref)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse ref as URL")
+	}
+
+	if u.Host == "" && u.Path == "" {
+		return nil, errors.Wrap(err, "ptr doesn't contain any host/path part, apply json pointer directly to object")
+	}
+
+	u.Fragment = ""
+	for _, p := range providers {
+		if val, err := p.GetBytes(u); err == nil {
+			return val, nil
+		}
+	}
+	return nil, errors.Wrap(err, "failed to resolve reference")
 }
 
 func setPtrOrInterface(container, value reflect.Value) bool {
