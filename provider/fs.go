@@ -42,6 +42,7 @@ func (fp *FS) Get(key *url.URL) (out interface{}, err error) {
 
 // GetBytes fetches the document specified by the `key` argument and returns its bytes content
 func (fp *FS) GetBytes(key *url.URL) ([]byte, error) {
+	var err error
 	if pdebug.Enabled {
 		g := pdebug.Marker("provider.FS.Get(%s)", key.String()).BindError(&err)
 		defer g.End()
@@ -56,7 +57,7 @@ func (fp *FS) GetBytes(key *url.URL) ([]byte, error) {
 
 	mpkey := &url.URL{Path: path}
 	if x, err := fp.mp.Get(mpkey); err == nil {
-		return x, nil
+		return x.([]byte), nil
 	}
 
 	fi, err := os.Stat(path)

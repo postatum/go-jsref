@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"io/ioutil"
 
 	"github.com/lestrrat/go-pdebug"
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ func NewHTTP() *HTTP {
 // Note that once a document is read, it WILL be cached for the
 // duration of this object, unless you call `Reset`
 func (hp *HTTP) Get(key *url.URL) (interface{}, error) {
-	d, err := hp.GetBytes()
+	d, err := hp.GetBytes(key)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (hp *HTTP) GetBytes(key *url.URL) ([]byte, error) {
 
 	v, err := hp.mp.Get(key)
 	if err == nil { // Found!
-		return v, nil
+		return v.([]byte), nil
 	}
 
 	res, err := hp.Client.Get(key.String())
@@ -68,7 +69,7 @@ func (hp *HTTP) GetBytes(key *url.URL) ([]byte, error) {
 		return nil, errors.Wrap(err, "read HTTP response body")
 	}
 
-	fp.mp.Set(key, d)
+	hp.mp.Set(key.String(), d)
 
 	return d, nil
 }
