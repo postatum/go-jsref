@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/lestrrat/go-pdebug"
 	"github.com/pkg/errors"
@@ -48,9 +47,9 @@ func (fp *FS) GetBytes(key *url.URL) ([]byte, error) {
 		defer g.End()
 	}
 
-	if strings.ToLower(key.Scheme) != "file" {
-		return nil, errors.New("unsupported scheme '" + key.Scheme + "'")
-	}
+	// if strings.ToLower(key.Scheme) != "file" {
+	// 	return nil, errors.New("unsupported scheme '" + key.Scheme + "'")
+	// }
 
 	// Everything other than "Path" is ignored
 	path := filepath.Clean(filepath.Join(fp.Root, key.Path))
